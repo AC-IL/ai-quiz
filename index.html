@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI挫折タイプ診断 | あなたのタイプがわかる</title>
+<meta name="description" content="5問答えるだけで、あなたのAI挫折タイプがわかる。タイプ別処方箋つき。">
+<meta property="og:title" content="AI挫折タイプ診断">
+<meta property="og:description" content="あなたがAIを使えなかった本当の理由がわかる。5問・無料。">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f8f6;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.25);
+    --text: #1a1a1a;
+    --text-sub: #666;
+    --text-hint: #999;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --border: rgba(255,255,255,0.12);
+      --border-hover: rgba(255,255,255,0.3);
+      --text: #f0f0f0;
+      --text-sub: #aaa;
+      --text-hint: #666;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+    line-height: 1.6;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+    max-width: 560px;
+    width: 100%;
+  }
+
+  .header-label {
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--text-hint);
+    margin-bottom: .5rem;
+  }
+
+  .header h1 {
+    font-size: clamp(18px, 4vw, 22px);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: .5rem;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: var(--text-sub);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    max-width: 560px;
+    width: 100%;
+  }
+
+  .progress {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 1.5rem;
+  }
+
+  .pd {
+    height: 3px;
+    flex: 1;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background .2s;
+  }
+
+  .pd.on { background: var(--text); }
+
+  .step-label {
+    font-size: 11px;
+    color: var(--text-hint);
+    letter-spacing: .05em;
+    margin-bottom: .6rem;
+  }
+
+  .question {
+    font-size: clamp(16px, 3.5vw, 18px);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    line-height: 1.55;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: .85rem 1.1rem;
+    margin: .5rem 0;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: background .15s, border-color .15s;
+  }
+
+  .btn:hover {
+    background: var(--bg);
+    border-color: var(--border-hover);
+  }
+
+  .btn:active { transform: scale(.99); }
+
+  .back-btn {
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: var(--text-hint);
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    margin-top: 1rem;
+    display: block;
+    transition: color .15s;
+  }
+
+  .back-btn:hover { color: var(--text-sub); }
+
+  /* Result */
+  .result-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: var(--radius-md);
+    margin-bottom: .75rem;
+    letter-spacing: .03em;
+  }
+
+  .result-title {
+    font-size: clamp(18px, 4vw, 21px);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: .4rem;
+    line-height: 1.4;
+  }
+
+  .result-pct {
+    font-size: 12px;
+    color: var(--text-hint);
+    margin-bottom: 1rem;
+  }
+
+  .result-desc {
+    font-size: 14px;
+    color: var(--text-sub);
+    line-height: 1.8;
+    margin-bottom: 1.25rem;
+  }
+
+  .rx-box {
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .rx-label {
+    font-size: 11px;
+    color: var(--text-hint);
+    letter-spacing: .05em;
+    margin-bottom: .4rem;
+  }
+
+  .rx-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.75;
+  }
+
+  .share-box {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: .9rem 1.1rem;
+    margin-bottom: 1rem;
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.6;
+  }
+
+  .cta-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: .85rem;
+    background: var(--text);
+    color: var(--surface);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-bottom: .6rem;
+    text-decoration: none;
+    transition: opacity .15s;
+  }
+
+  .cta-btn:hover { opacity: .85; }
+
+  .restart-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: .65rem;
+    background: none;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+  }
+
+  .restart-btn:hover { background: var(--bg); }
+
+  .footer {
+    margin-top: 2rem;
+    font-size: 12px;
+    color: var(--text-hint);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <p class="header-label">無料診断</p>
+  <h1>あなたのAI挫折タイプ、わかりますか？</h1>
+  <p>5問答えるだけ。タイプ別処方箋つき。</p>
+</div>
+
+<div class="card" id="card"></div>
+
+<p class="footer">© AI挫折層向け入門ガイド｜診断結果は記録・保存されません</p>
+
+<script>
+const T = {
+  migo: {
+    label: "目的迷子型",
+    bg: "#E1F5EE", tc: "#04342C",
+    pct: "推定15〜25% ・ 最多勢力のひとつ",
+    desc: "AIを使い始める前に「何をしたいか」が決まっていなかったタイプ。ツールへの興味は本物だけど、目的地なしで地図だけ持っている状態。使えない理由はAIの性能ではなく、問いの設計にある。",
+    rx: "まず「自分の1日の業務でいちばん面倒な作業」を1つだけ書き出してみよう。その作業をAIにそのまま丸投げするところからスタートする。「何でもできる」から始めると詰まる——「これだけやらせる」から始めると動ける。"
+  },
+  ippatsu: {
+    label: "一発屋型",
+    bg: "#E6F1FB", tc: "#042C53",
+    pct: "推定25〜40% ・ 全タイプ最多（自覚なし）",
+    desc: "最初の「すごい！」という感動体験はあった。でも日常業務に組み込めないまま自然消滅したタイプ。挫折の自覚がないのが最大の特徴。「あ、使えばよかった」と気づく瞬間はあっても、その場でプロンプトを組む手間を惜しんで手作業に戻るを繰り返すうちに、いつの間にかAIの存在を忘れていく。",
+    rx: "「今は急いでるから手作業でいいや」という瞬間こそが、AI離脱のトリガー。まず「毎朝の◯◯だけはAIに任せる」と1つだけ決める。おもちゃで終わらせず、道具として手に馴染ませる期間をあえて作ることが鍵。"
+  },
+  katuyo: {
+    label: "AI活用型",
+    bg: "#C0DD97", tc: "#173404",
+    pct: "推定10〜20% ・ この記事の読者では少数派",
+    desc: "AIをすでに日常・業務に組み込んで使いこなせているタイプ。試行錯誤を重ねて「使える場面」を自分で見つけてきた。挫折層ではないが、だからこそ周囲の挫折が見えている立場でもある。",
+    rx: "次のステップは「再現性」と「伝える力」。自分の使い方を言語化して、周りの挫折層に渡せる形にすることが、あなたにとっての次の壁。あなたが当たり前にやっていることは、挫折層にとって知りたいことそのもの。"
+  },
+  kensaku: {
+    label: "検索エンジン執着型",
+    bg: "#9FE1CB", tc: "#04342C",
+    pct: "推定10% ・「今も使ってるが物足りない」層も含む",
+    desc: "AIをGoogleの上位互換として使い続けているタイプ。「正しい情報を一発で出す」ことを求めた結果、ハルシネーション（でたらめ）に出会って失望した。IT系ベテランに意外と多いタイプ。",
+    rx: "AIはGoogle検索ではなく「思考パートナー」。正確な情報を求めるより、「アイデアを出させる」「文章を整えさせる」「壁打ち相手になってもらう」使い方に切り替えると世界が変わる。ファクト確認は最後に自分でやる前提で使えばいい——それだけで使える場面が10倍になる。"
+  },
+  kanpeki: {
+    label: "完璧主義型",
+    bg: "#EEEDFE", tc: "#26215C",
+    pct: "推定15〜18% ・ IT系・エンジニアに多い",
+    desc: "AIの出力に1つでも誤りを発見した瞬間に信頼が崩壊したタイプ。「間違えるなら使えない」という0/1思考が特徴。品質意識の高い職種やエンジニアに多い。",
+    rx: "正解率80%のアシスタントを使いこなすのが現代のスキル。AIが出した答えを「完成品」ではなく「叩き台・素材」として扱い、最終チェックは自分でやるという前提で使い始めると、突然使える幅が広がる。"
+  },
+  majutsu: {
+    label: "期待値ズレ型",
+    bg: "#FAEEDA", tc: "#412402",
+    pct: "推定12〜15%",
+    desc: "「AIなら何でも自動でできる」という過剰な期待値を持って使い始めたタイプ。最初の出力が想像と違った瞬間に「やっぱり使えない」と結論づけた。メディアの盛りすぎが元凶。",
+    rx: "AIはGoogle検索と同じ「使い方で差がつくツール」。1回の出力で判断せず、まず10回使ってみることを自分に課してみよう。10回試せば、必ず「これは使える」という場面に出会う。"
+  },
+  prompt: {
+    label: "プロンプト挫折型",
+    bg: "#FAECE7", tc: "#4A1B0C",
+    pct: "推定20〜25%",
+    desc: "AIにうまく指示できず、意図が伝わらないまま諦めたタイプ。「英語で書かないといけない」と思い込んでいるケースも多い。指示文を完璧に書こうとしすぎて逆に詰まるパターンも。",
+    rx: "プロンプトは「役割＋条件＋出力形式」の3点だけで7割解決する。完璧な文章は不要——箇条書きで雑に投げる方が意図は伝わりやすい。「もっと短く」「もっとカジュアルに」と会話を続けるのが正解。"
+  },
+  security: {
+    label: "セキュリティ壁型",
+    bg: "#FCEBEB", tc: "#501313",
+    pct: "推定10〜12% ・ 大企業・公務員・士業に多い",
+    desc: "情報漏洩リスクや社内ルールの不透明さで止まったタイプ。実はルールを作れる立場なのに、ルールがないから動けないという矛盾に陥っているケースも多い。",
+    rx: "まず「会社情報を一切入れない使い方」から始めれば今日から使える。自分の文章を添削させる、汎用的な知識を調べる——これだけで業務効率は変わる。ルールは後からでいい。"
+  },
+  jouhou: {
+    label: "情報洪水型",
+    bg: "#F1EFE8", tc: "#2C2C2A",
+    pct: "推定8〜10% ・ 勉強熱心な30〜40代に多い",
+    desc: "SNSやYouTubeのAI情報が多すぎて「何から始めればいい？」状態で止まったタイプ。勉強意欲はあるが、インプットとアウトプットの順番が逆になっている。",
+    rx: "勉強より先に「1つのツールを1週間だけ使い倒す」が正解。1週間後に「何が分からないか」が分かれば、そこから勉強すればいい。理解してから使うのではなく、使いながら理解するのがAIの正しい入口。"
+  }
+};
+
+const FLOW = [
+  {
+    id: "q1", step: "Q1 / 4", prog: 1,
+    q: "AIツールを使い始めたとき、「何に使うか」は明確だった？",
+    opts: [
+      { t: "いや、とりあえず触ってみた感じ", n: "migo" },
+      { t: "はい、目的はあった", n: "q2" }
+    ]
+  },
+  {
+    id: "q2", step: "Q2 / 4", prog: 2,
+    q: "AIを使って「すごい！」と感動した体験は一度でもあった？",
+    opts: [
+      { t: "はい、あった", n: "q3a" },
+      { t: "いや、感動する前に詰まった・失望した", n: "q3b" }
+    ]
+  },
+  {
+    id: "q3a", step: "Q3 / 4", prog: 3,
+    q: "その感動体験のあと、今どうなっている？",
+    opts: [
+      { t: "今も継続して使えている", n: "katuyo" },
+      { t: "いつの間にか使わなくなった", n: "ippatsu" },
+      { t: "使い続けたが、精度や間違いに失望した", n: "q4" }
+    ]
+  },
+  {
+    id: "q3b", step: "Q3 / 4", prog: 3,
+    q: "詰まった・失望した主な理由は？",
+    opts: [
+      { t: "うまく指示できなかった・意図が伝わらなかった", n: "prompt" },
+      { t: "情報漏洩・社内ルールが心配で止まった", n: "security" },
+      { t: "情報多すぎ・何から始めればいいかわからなかった", n: "jouhou" },
+      { t: "期待外れ・誤情報に失望した（感動ゼロ）", n: "q4" }
+    ]
+  },
+  {
+    id: "q4", step: "Q4 / 4", prog: 4,
+    q: "「期待外れ」の中身は、どれに近い？",
+    opts: [
+      { t: "調べ物・事実確認で使ったら、でたらめな情報を出した", n: "kensaku" },
+      { t: "出力の品質・精度全般が信用できなかった", n: "kanpeki" },
+      { t: "全体的に思ったほどすごくなかった", n: "majutsu" }
+    ]
+  }
+];
+
+// Brain記事URL（公開後に差し替え）
+const BRAIN_URL = "https://brain-market.com/";
+
+let hist = [];
+
+function node(id) {
+  if (T[id]) return { type: "result", key: id };
+  return FLOW.find(f => f.id === id) || null;
+}
+
+function render(id) {
+  const el = document.getElementById("card");
+  const n = node(id);
+
+  if (n.type === "result") {
+    const t = T[n.key];
+    const isKatuyo = n.key === "katuyo";
+    el.innerHTML = `
+      <div class="progress">${[1,2,3,4].map(() => `<div class="pd on"></div>`).join("")}</div>
+      <span class="result-badge" style="background:${t.bg};color:${t.tc};">${t.label}</span>
+      <p class="result-title">あなたは <strong>${t.label}</strong> です</p>
+      <p class="result-pct">${t.pct}</p>
+      <p class="result-desc">${t.desc}</p>
+      <div class="rx-box">
+        <p class="rx-label">${isKatuyo ? "次のステップ" : "処方箋"}</p>
+        <p class="rx-text">${t.rx}</p>
+      </div>
+      <div class="share-box">
+        ${isKatuyo
+          ? "あなたが「当たり前」にやっていることは、挫折層にとって知りたいことそのもの。この診断を周りの人に送ってみよう。"
+          : "タイプ別の<strong>脱出ワークフロー完全版</strong>とコピペ用プロンプトテンプレートは、有料記事に収録しています。"}
+      </div>
+      <a class="cta-btn" href="${BRAIN_URL}" target="_blank" rel="noopener">
+        ${isKatuyo ? "記事を周りにシェアする →" : "脱出ワークフローを読む →"}
+      </a>
+      <button class="restart-btn" onclick="startOver()">最初からやり直す</button>
+    `;
+    return;
+  }
+
+  const dots = [1,2,3,4].map(i => `<div class="pd${i <= n.prog ? " on" : ""}"></div>`).join("");
+  el.innerHTML = `
+    <div class="progress">${dots}</div>
+    <p class="step-label">${n.step}</p>
+    <p class="question">${n.q}</p>
+    ${n.opts.map(o => `<button class="btn" onclick="go('${o.n}')">${o.t}</button>`).join("")}
+    ${hist.length > 0 ? `<button class="back-btn" onclick="goBack()">← 前の質問に戻る</button>` : ""}
+  `;
+}
+
+function go(id) { hist.push(id); render(id); }
+function goBack() { if (hist.length <= 1) { startOver(); return; } hist.pop(); render(hist[hist.length - 1]); }
+function startOver() { hist = ["q1"]; render("q1"); }
+
+startOver();
+</script>
+</body>
+</html>
